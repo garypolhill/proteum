@@ -1,8 +1,1282 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="en-UK" dir="ltr">
+    <head>
+        <style type = "text/css">
+            <!--
+                body { font-family: sans-serif; }
+                h1, h2, h3, h4, h5, h6 { font-family: sans-serif; }
+                .tab { margin-left: 40px; }
+                .logo {
+                    float: left;
+                    width: 200px;
+                    margin-right: 1em;
+                }
+                .page-title { overflow: auto; }
+            -->
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/mathjs@15.2.0/lib/browser/math.min.js"
+            integrity="sha384-CxR1K3HZUkOaVgBmRwqkpngEKdsI4pZVJqItEffLpTGqVE6C/4X9MYaLZcoZH7Nx"
+            crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+            integrity="sha384-Wuix6BuhrWbjDBs24bXrjf4ZQ5aFeFWBuKkFekO2t8xFU0iNaLQfp2K6/1Nxveei"
+            crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <h1 class="page-title">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="200" height="200" role="img" aria-label="proteum logo">
+                    <polyline points="120,120 200,70 300,130 400,40" fill="none" stroke="#e88203" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"  />
+                    <circle cx="200" cy="70" r="24" fill="#872175"/>
+                    <circle cx="300" cy="130" r="20" fill="#78a22f"/>
+                    <circle cx="400" cy="40" r="32" fill="#569bbe"/>
+
+                    <text x="276" y="230" text-anchor="middle" font-family="sans-serif" font-size="96" font-weight="600" fill="#1c4273">
+                        proteum
+                    </text>
+                </svg>
+
+            </div>
+            PrOTEUM: Protein Outcomes via Tax and Elasticity User Model
+        </h1>
+        
+        <h2>Cross-elasticity for dietary proteins</h2>
+        
+        <p>
+            This document embeds <a href="https://link.springer.com/article/10.1186/s40100-024-00324-8/tables/6">Table 6</a>
+            of Dogbe <i>et al</i>.'s (2024) "Nutritional implications of substituting plant-based proteins for meat: evidence
+            from home scan data" <i>Agriculture and Food Economics</i> <b>12</b>, 30 (doi:<a href="https://doi.org/10.1186/s40100-024-00324-8">10.1186/s40100-024-00324-8</a>)
+            in a way that allows you to explore the impact of percentage changes in prices on quantities, and the effect of changes
+            in quantities on prices. Weight (which economists sometimes refer to as 'volume') data are based on
+            <a href="https://link.springer.com/article/10.1186/s40100-024-00324-8/tables/1">Table 1</a>
+            in the same paper. These are supplied per capita per week. Conversion to annual consumption assumes 365 days per year.
+            We use a figure of 5.55 million for the population of Scotland, based
+            on the <a href="https://www.nrscotland.gov.uk/">National Records of Scotland</a>'s <a href="https://www.nrscotland.gov.uk/publications/mid-2024-population-estimates/">mid-2024 population estimates</a>.
+        </p>
+
+        <p>
+            The caption for the table says that it contains the uncompensated elasticity of demand for animal and plant protein
+            in Scottish households, based on the authors' computations using
+            <a href="https://www.kantar.com/uki/solutions/signal-intelligence/consumer-and-shopper-behaviour">Kantar Worldpanel data</a>, 2023.</p>
+        </p>
+
+        <h2>Usage</h2>
+        <p>
+            To use the interactive table below, your web browser needs to have JavaScript enabled. You can then do one of the following:
+
+            <ol>
+                <li>Enter percentage changes in the % Change Price column and click the (Update ...) ... Quantities button to see the effect on demand.</li>
+                <li>Enter percentage changes in the % Change Demand column and click the (Update ...) ... Prices button to see the effect on prices.</li>
+                <li>Enter percentage changes in the % Change Price column, and click the (Find ...) ... Quantities button to find the changes in demand
+                    that would lead to those changes in price, and the other consequent price changes (see <a href="#complicated">below</a>). </li>
+                <li>Enter percentage changes in the % Change Demand column, and click the (Find ...) ... Prices button to find the changes in price
+                    that would lead to those changes in demand, and the other consequent demand changes (see <a href="#complicated">below</a>). </li>
+            </ol>
+        </p>
+
+        <p>
+            If you want, you can then save the table by clicking the button below. (Check the checkbox if you will be looking at
+            the downloaded CSV file with Microsoft Excel.) To start again, just refresh the page.
+        </p>
+
+        <button id="save_table">Save Table</button><input type="checkbox" id="excel" unchecked><label for="excel">Ensure the CSV file can be read by <a
+            href="https://support.microsoft.com/en-gb/office/opening-csv-utf-8-files-correctly-in-excel-8a935af5-3416-4edd-ba7e-3dfd2bc4a032">Microsoft
+            Excel</a></label>
+
+        <p>
+            Note that the original tables in Dogbe et al. (2024) had standard errors on each of the matrix entries that
+            are not included as propagated uncertainties in the output numbers. However, the standard errors can be used 
+            to remove from the cross-elasticity matrix those entries that are not significant. An element of the cross-elasticity 
+            matrix is not significant if its absolute value divided by its corresponding standard error is less than 1.96.
+            That element should then be set to zero. If you check the 'Only significant?' box, then the appropriately revised
+            cross-elasticity matrix (or its inverse) will be used instead of that as per Table 6.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th align="left" rowspan="3" id="h_protein">Protein</th>
+                    <th colspan="2">Scenario</th>
+                    <th colspan="2">Weight</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" id="h_delta_p">% Change Price</th>
+                    <th rowspan="2" id="h_delta_q">% Change Demand</th>
+                    <th colspan="2"><div id="units"></div></th>
+                </tr>
+                <tr>
+                    <th id="h_initial">Initial</th>
+                    <th id="h_scenario">Scenario</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th align="left" id="h_dairy">Dairy</th>
+                    <td><input type="number" id="p_dairy" value="0"/></td>
+                    <td><input type="number" id="q_dairy" value="0"/></td>
+                    <td align="right"><div id="i_dairy"></div></td>
+                    <td align="right"><div id="v_dairy"></div></td>
+                </tr>
+                <tr bgcolor="#F0F0F0">
+                    <th align="left" id="h_beef">Beef and Veal</th>
+                    <td><input type="number" id="p_beef" value="0"/></td>
+                    <td><input type="number" id="q_beef" value="0"/></td>
+                    <td align="right"><div id="i_beef"></div></td>
+                    <td align="right"><div id="v_beef"></div></td>
+                </tr>
+                <tr>
+                    <th align="left" id="h_lamb">Mutton and Lamb</th>
+                    <td><input type="number" id="p_lamb" value="0"/></td>
+                    <td><input type="number" id="q_lamb" value="0"/></td>
+                    <td align="right"><div id="i_lamb"></div></td>
+                    <td align="right"><div id="v_lamb"></div></td>
+                </tr>
+                <tr bgcolor="#F0F0F0">
+                    <th align="left" id="h_pork">Pork</th>
+                    <td><input type="number" id="p_pork" value="0"/></td>
+                    <td><input type="number" id="q_pork" value="0"/></td>
+                    <td align="right"><div id="i_pork"></div></td>
+                    <td align="right"><div id="v_pork"></div></td>
+                </tr>
+                <tr>
+                    <th align="left" id="h_poultry">Poultry</th>
+                    <td><input type="number" id="p_poultry" value="0"/></td>
+                    <td><input type="number" id="q_poultry" value="0"/></td>
+                    <td align="right"><div id="i_poultry"></div></td>
+                    <td align="right"><div id="v_poultry"></div></td>
+                </tr>
+                <tr bgcolor="#F0F0F0">
+                    <th align="left" id="h_fish">Fish</th>
+                    <td><input type="number" id="p_fish" value="0"/></td>
+                    <td><input type="number" id="q_fish" value="0"/></td>
+                    <td align="right"><div id="i_fish"></div></td>
+                    <td align="right"><div id="v_fish"></div></td>
+                </tr>
+                <tr>
+                    <th align="left" id="h_eggs">Eggs</th>
+                    <td><input type="number" id="p_eggs" value="0"/></td>
+                    <td><input type="number" id="q_eggs" value="0"/></td>
+                    <td align="right"><div id="i_eggs"></div></td>
+                    <td align="right"><div id="v_eggs"></div></td>
+                </tr>
+                <tr bgcolor="#F0F0F0">
+                    <th align="left" id="h_peas">Peas</th>
+                    <td><input type="number" id="p_peas" value="0"/></td>
+                    <td><input type="number" id="q_peas" value="0"/></td>
+                    <td align="right"><div id="i_peas"></div></td>
+                    <td align="right"><div id="v_peas"></div></td>
+                </tr>
+                <tr>
+                    <th align="left" id="h_beans">Beans and Pulses</th>
+                    <td><input type="number" id="p_beans" value="0"/></td>
+                    <td><input type="number" id="q_beans" value="0"/></td>
+                    <td align="right"><div id="i_beans"></div></td>
+                    <td align="right"><div id="v_beans"></div></td>
+                </tr>
+                <tr bgcolor="#F0F0F0">
+                    <th align="left" id="h_nuts">Nuts, Seeds, and Peanut Butter</th>
+                    <td><input type="number" id="p_nuts" value="0"/></td>
+                    <td><input type="number" id="q_nuts" value="0"/></td>
+                    <td align="right"><div id="i_nuts"></div></td>
+                    <td align="right"><div id="v_nuts"></div></td>
+                </tr>
+                <tr>
+                    <th align="left" id="h_non_dairy">Non-Dairy Milk Substitutes</th>
+                    <td><input type="number" id="p_non_dairy" value="0"/></td>
+                    <td><input type="number" id="q_non_dairy" value="0"/></td>
+                    <td align="right"><div id="i_non_dairy"></div></td>
+                    <td align="right"><div id="v_non_dairy"></div></td>
+                </tr>
+                <tr bgcolor="#E0E0E0">
+                    <th align="left" id="h_total_non_misc" colspan="3">Non-Miscellaneous Totals</th>
+                    <td align="right"><div id="i_total"></div></td>
+                    <td align="right"><div id="v_total"></div></td>
+                </tr>
+                <tr>
+                    <th align="left" id="h_misc">Miscellaneous</th>
+                    <td><input type="number" id="p_misc" value="0"/></td>
+                    <td><input type="number" id="q_misc" value="0"/></td>
+                    <td align="right"><div id="i_misc"></div></td>
+                    <td align="right"><div id="v_misc"></div></td>
+                </tr>
+                <tr>
+                    <th align="right">Update ... </th>
+                    <td align="center">
+                        <button id="update_q">... Quantities (1)</button>
+                    </td>
+                    <td align="center">
+                        <button id="update_p">... Prices (2)</button>
+                    </td>
+                    <td colspan="2" align="center">
+                        <input type="checkbox" id="per_capita" checked/>
+                        <label for="per_capita">Per capita?</label>
+                    </td>
+                </tr>
+                <tr>
+                    <th align="right">Find ... </th>
+                    <td align="center">
+                        <button id="find_q">... Quantities (3)</button>
+                    </td>
+                    <td align="center">
+                        <button id="find_p">... Prices (4)</button>
+                    </td>
+                    <td colspan="2" align="center">
+                        <input type="radio" id="t_day" name="time"/>
+                        <label for="t_day">Daily</label>
+                        <input type="radio" id="t_week" name="time" checked/>
+                        <label for="t_week">Weekly</label>
+                        <input type="radio" id="t_year" name="time"/>
+                        <label for="t_year">Yearly</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td colspan="2" align="center">
+                        <input type="checkbox" id="only_sig" unchecked/>
+                        <label for="only_sig">Only significant?</label>
+                    </td>
+                    <td colspan="2">&nbsp;</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Dogbe et al.'s Scenarios</h2>
+
+        <p>
+            <a href="https://link.springer.com/article/10.1186/s40100-024-00324-8/tables/5">Table 5</a> of
+            the Dogbe et al. paper shows four 10% tax increase scenarios. Click the corresponding button to 
+            implement that scenario in the table above.
+        </p>
+
+        <p>
+            <ul>
+                <li><button id="scenario_all">All Non-Plant-Based Products</button> On p. 17, this is
+                    found to cause lamb and mutton to decrease in demand by 17.10%, and eggs by 5.99%; 
+                    while nuts, seeds and peanut butter increase in demand by 5.13%, and peas by 0.82%. </li>
+                <li><button id="scenario_red">Red Meat</button> On p. 17, increasing red meat by 10%
+                    is observed to cause reduction in demand for poultry and pork as well.</li>
+                <li><button id="scenario_white">White Meat</button> On p. 18, increasing white meat 
+                    by 10% leads to increases in demand for dairy of 0.58%, and for beef and veal, 0.84%. 
+                    However, demand for fish decreases by 15.92%, and that for poultry by 13%. 
+                    Similarly, peas see demand decreased by 2.95% in this scenario</li>
+                <li><button id="scenario_eggs_dairy">Eggs and Dairy</button> On p. 18, this scenario 
+                    leads to increases in demand for all proteins except those taxed (eggs and dairy). </li>
+            </ul>
+        </p>
+
+        <p>
+            Note that minor discrepancies between the changes in demand arising from changes in price 
+            as reported in Dogbe et al. and those in the table above, are caused by Table 6 only providing
+            numbers to three decimal places. 
+        </p>
+
+        <h2 id="complicated">More Complicated Scenarios</h2>
+
+        <p>
+            The cross-elasticity matrix allows us to explore slightly more complicated scenarios, which are
+            enabled here using the 'Find...' buttons under the table. In more complicated scenarios, we are 
+            asking one of the following two questions:
+
+            <ol>
+                <li>Suppose we want to achieve a given change in price for some subset of the protein sources. 
+                    What change in demand for only those sources results in that change, and what is the 
+                    effect of that change in demand on prices for the other sources?</li>
+                <li>Suppose we want to achieve a given change in demand for some subset of the protein sources.
+                    What change in price for only those sources results in that change, and what is the 
+                    effect of that change in price on demand for the other sources?</li>
+            </ol>
+        </p>
+
+        <h3>Example: reducing demand for red meat</h3>
+
+        <p>
+            To make question 1 concrete, we could ask of the second Dogbe et al. scenario: what reduction in
+            demand for red meat leads to a price increase of 10% for those protein sources, and how does that 
+            change in demand affect the prices of other protein sources?
+        </p>
+
+        <p>
+            To explore that scenario, we set the prices for Beef and Veal; Mutton and Lamb; and Pork to 10, and the 
+            prices for all the other proteins to 0, before clicking the (Find...) ...Quantities button. You 
+            can see this by clicking the Reduce Demand for Red Meat button below:
+
+            <ul>
+                <li><button id="scenario_reduce_red_meat">Reduce Demand for Red Meat</button> Set the desired 
+                increase in price for red meat to 10%, work out the change in demand needed to bring that about,
+                and then see what the effect is on prices for other proteins.</li>
+            </ul>
+        </p>
+
+        <p>
+            If you run that example (with Only significant? unchecked), you should find that we need to reduce
+            demand for Beef and Veal by 16.215%; Mutton and Lamb by 16.475%; and Pork by 13.952%. This shift in
+            demand results in a price increase for Diary of 1.234%; Fish 0.527%; Eggs 0.953%; Peas 2.036%; Beans
+            and Pulses 0.751%; Nuts, Seeds, and Peanut Butter 2.751%; and Non-Dairy Milk Substitutes by 0.497%.
+            All the plant-based proteins become more expensive, while Poultry becomes cheaper by 0.946%. You 
+            can check the Only significant? box, but then the numbers will be different.
+        </p>
+
+        <h3>Example: subsidising plant-based proteins</h3>
+
+        <p>
+            For an example of question 2 above related to the first Dogbe et al. scenario, rather than taxing animal
+            protein, we could subsidise plant-based proteins. So, what subsidies do we need to offer for 
+            plant-based proteins to achieve, say, a 10% increase in their demand? And then, how do those
+            price changes affect the change in demand for other proteins?
+        </p>
+
+        <p>
+            To implement that, we set the quantities for Peas; Beans and Pulses; Nuts, Seeds, and Peanut Butter;
+            and Non-Dairy Milk Substitutes to 10, and those for all the other proteins (including Miscellaneous)
+            to 0. Then we click the (Find ...) ...Prices button. You can see this by clicking the Subsidise Plant-Based
+            Products button below:
+
+            <ul>
+                <li><button id="scenario_plant_based">Subsidise Plant Based Products</button> Set the desired
+                    increase in plant-based proteins to 10%, work out the change in prices for those products 
+                    needed to bring that about, and then see what the effect is on demand for animal proteins.</li>
+            </ul>
+        </p>
+
+        <p>
+            The results (with Only signficant? unchecked) tell us we need to reduce the price of Peas by 15.569%;
+            Beans and Pulses by 8.067%; Nuts, Seeds, and Peanut Butter by 6.709%; and Non-Diary Milk Substitutes
+            by 10.767%. The effects on the animal proteins are small: Mutton and Lamb increases in demand by 1.457%,
+            Poultry by 0.519%, and Eggs by 0.134%. There are decreases in demand of less than 1% for Dairy (0.333);
+            Beef and Veal (0.702); Pork (0.939); and Fish (0.347).
+        </p>
+
+        <h2>Acknowledgements</h2>
+
+        <p>
+            The lead author of the original paper is <a href="https://www.linkedin.com/in/wisdomdogbe/">Wisdom Dogbe</a>.
+            We are grateful to <a href="https://pure.sruc.ac.uk/en/persons/cesar-revoredo-giha/">Cesar Revoredo Giha</a>
+            of <a href="https://www.sruc.ac.uk/">Scotland's Rural College (SRUC)</a> for his advice on using the table.
+            All mistakes on this page are ours.
+        </p>
+
+        <p>
+            We acknowledge funding from the Scottish Government Rural and Environment Science and Analytical Services Division
+            (project reference <a href="https://large-scale-modelling.hutton.ac.uk/">JHI-C5-1</a>).
+        </p>
+
+        <h2>Licence and (No) Warranty</h2>
+        <p>
+            This page is free software: you can redistribute it and/or modify
+            it under the terms of the <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU General Public License</a> as published by
+            the Free Software Foundation, either version 3 of the License, or
+            (at your option) any later version.
+        </p>
+
+        <p>
+            This program is distributed in the hope that it will be useful,
+            but WITHOUT ANY WARRANTY; without even the implied warranty of
+            MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+            <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU General Public License</a>
+            for more details.
+        </p>
+
+        <p>
+        </p>
+
+        <h2>Notes</h2>
+
+        <p>
+            Going from quantity to price requires us to find the inverse of the matrix in Dogbe et al.'s Table 6.
+            Earlier versions of this page hard-coded the inverse from the results of the <code>solve()</code>
+            function using <a href="https://www.r-project.org/">R</a>. However, implementing the Find... buttons
+            requires calculation of the inverse matrix on the fly, for which we have used the 
+            <a href="https://mathjs.org/">mathjs</a> library.
+        </p>
+
+        <p>
+            The mathematics behind the Find... buttons uses <a href="https://en.wikipedia.org/wiki/Block_matrix">block matrix</a>
+            algebra, shuffling around the cross-elasticity matrix so that the first \(k\) rows and columns correspond to
+            the \(k\) elements you have set to non-zero in % Change Prices or % Change Demand. For the purposes of this 
+            explanation we will assume it is % Change Prices you have set \(k\) non-zero numbers in, and then we let \(M\)
+            be the appropriately shuffled cross-elasticity matrix. The process for % Change Demand is the same, except that 
+            \(M\) is the appropriately shuffled inverse cross-elasticity matrix.
+        </p>
+
+        <p>
+            The normal process for calculating the change in quantity \(\Delta Q\) for a given change in price \(\Delta P\) is:
+        </p>
+
+\[
+        M \Delta P = \Delta Q
+\]
+
+        <p>
+            But our scenario is a bit more complicated. We only know the prices of the first \(k\) elements of \(\Delta P\),
+            and we want to find the first \(k\) elements of \(\Delta Q\), with the other \(12 - k\) elements set to 0.
+            To get round that, we write \(M\), \(\Delta P\) and \(\Delta Q\) as block matrices, with the above equation
+            being rewritten as:
+        </p>
+
+\[
+        \begin{bmatrix}
+            A & B \\
+            C & D
+        \end{bmatrix}
+        \begin{bmatrix} 
+            R \\
+            S 
+        \end{bmatrix}
+        =
+        \begin{bmatrix} 
+            T \\
+            U 
+        \end{bmatrix}
+\]
+
+        <p>
+            Here, matrix \(A\) is a \(k \times k\) square matrix, \(B\) is \(k \times 12 - k\), and so on. The numbers we
+            want to find in \(\Delta Q\) is the vector \(T\) of length \(k\), and all the remaining elements \(U\) are 0.
+            Using block matrix algebra, we know that:
+        </p>
+
+\[
+            T = AR + BS
+\]
+
+        <p>
+            (You can satisfy yourself of this by expanding all the terms in the corresponding matrix multiplications.)
+        </p>
+
+        <p>
+            To find \(T\), we therefore need to know the values of \(S\), which have not been supplied. Using 0 to represent
+            \(U\) (so 0 is an appropriate length vector not a scalar):
+        </p>
+
+\[
+            0 = CR + DS
+\]
+
+        <p>
+            Rearranging in terms of \(S\):
+        </p>
+
+\[
+            S = D^{-1}(-CR)
+\]
+
+        <p>
+            Substituting for \(S\) in the formula for \(T\):
+        </p>
+
+\[
+            T = AR + B(D^{-1}(-CR))
+\]
+
+        <p>
+            And so we have found all the unknown variables we need, and the inverse matrix we need to calculate on the fly is \(D^{-1}\).
+        </p>
+
+        <p>
+            If you would like to download the above cross-elasticity matrix, its inverse, the standard errors, or the original
+            consumption data from Dogbe et al., then the buttons below provide the means to do so. Note that if you have checked
+            the 'Only significant?' box in the table above, then the buttons for downloading the matrix (and its inverse) will
+            download the corrected matrix (and its inverse) rather than the values in the original paper.
+        </p>
+
+        <p>
+            <button id="download_matrix">Download Matrix</button>
+        </p>
+        <p>
+            <button id="download_inverse">Download Inverse Matrix</button>
+        </p>
+        <p>
+            <button id="download_std_err">Download Standard Errors Matrix</button>
+        </p>
+        <p>
+            <button id="download_consumption">Download Consumption</button>
+        </p>
+
+        <script type="module" id="elasticity">
+/*****************************************************************************
+ *
+ * Global variables
+ *
+ *****************************************************************************/
+// Population of Scotland
+const scot_pop = 5550000; // Source: https://www.nrscotland.gov.uk/publications/mid-2024-population-estimates/
+
+// Number of digits after the decimal point to show
+const dig = 3;
+
+// Number of digits after the decimal point when exporting
+const export_dig = 6;
+
+// ID labels to use (after /^._/) for each protein
+const foods = ["dairy", "beef", "lamb", "pork", "poultry", "fish", "eggs", "peas", "beans", "nuts", "non_dairy", "misc"];
+
+// Last update done (0 -- none; -1 -- prices; +1 -- quantities; -2 -- find prices; +2 -- find quantities)
+var last_update = 0;
+
+// Zeroed foods in a complicated scenario 
+const z_foods = [];
+
+/*****************************************************************************
+ *
+ * Function cross_elast()
+ *
+ * Return the cross-elasticity matrix to use given the user's preferences,
+ * which primarily include whether the matrix should only have non-zero
+ * entries for values that are statistically significant.
+ *
+ *****************************************************************************/
+function cross_elast() {
+    // These data come from https://link.springer.com/article/10.1186/s40100-024-00324-8/tables/6
+    const XE = [
+        [-0.890,  0.046,  0.026,  0.040,  0.019,  0.039,  0.008,  0.012,  0.008,  0.001,  0.007,  0.363],
+        [ 0.158, -1.526, -0.072, -0.087, -0.038,  0.122,  0.015,  0.030,  0.018,  0.068, -0.034, -0.432],
+        [ 0.292, -0.186, -1.318, -0.177, -0.161, -0.102, -0.059, -0.080,  0.018, -0.005, -0.030, -0.586],
+        [ 0.113, -0.072, -0.058, -1.308, -0.031, -0.015,  0.027,  0.022, -0.003,  0.046,  0.029, -0.309],
+        [ 0.055, -0.036, -0.060, -0.036, -1.286, -0.015,  0.017, -0.038,  0.004,  0.006, -0.000, -0.456],
+        [ 0.122,  0.108, -0.035, -0.013, -0.010, -1.583, -0.028, -0.012,  0.027,  0.007,  0.025, -0.387],
+        [ 0.097,  0.050, -0.063,  0.096,  0.056, -0.088, -0.750, -0.040,  0.012,  0.007,  0.032,  0.523],
+        [ 0.288,  0.184, -0.174,  0.161, -0.223, -0.074, -0.083, -1.102,  0.040, -0.047,  0.664,  0.773],
+        [ 0.108,  0.066,  0.021, -0.010,  0.016,  0.114,  0.014,  0.023, -1.316, -0.008,  0.029,  0.066],
+        [ 0.023,  0.237, -0.009,  0.191,  0.028,  0.031,  0.009, -0.027, -0.007, -1.511,  0.057,  0.148],
+        [ 0.096, -0.137, -0.044,  0.130, -0.003,  0.111,  0.043,  0.442,  0.032,  0.066, -1.633,  0.023],
+        [ 0.030, -0.008, -0.009, -0.007, -0.010, -0.012,  0.003,  0.003,  0.000, -0.000,  0.001, -1.013]
+    ];
+
+    if(document.getElementById("only_sig").checked) {
+        const std_err = cross_elast_err();
+        for(let r = 0; r < XE.length; r++) {
+            for(let c = 0; c < XE[r].length; c++) {
+                if(Math.abs(XE[r][c] / std_err[r][c]) < 1.96) {
+                    XE[r][c] = 0;
+                }
+            }
+        }
+    }
+
+    return XE;
+}
+
+/*****************************************************************************
+ *
+ * Function cross_elast_err()
+ *
+ * Return the standard errors on the cross-elasticity matrix.
+ *
+ *****************************************************************************/
+
+function cross_elast_err() {
+    // Ibid. (see cross_elast())
+
+    const XE_err = [
+        [0.031, 0.013, 0.008, 0.013, 0.014, 0.018, 0.006, 0.014, 0.004, 0.007, 0.011, 0.036],
+        [0.046, 0.025, 0.018, 0.026, 0.023, 0.031, 0.014, 0.025, 0.011, 0.016, 0.026, 0.064],
+        [0.078, 0.047, 0.103, 0.050, 0.042, 0.052, 0.020, 0.064, 0.012, 0.020, 0.041, 0.164],
+        [0.041, 0.023, 0.016, 0.028, 0.026, 0.026, 0.019, 0.023, 0.011, 0.016, 0.026, 0.061],
+        [0.049, 0.022, 0.016, 0.029, 0.034, 0.030, 0.016, 0.026, 0.015, 0.016, 0.027, 0.079],
+        [0.056, 0.026, 0.017, 0.026, 0.026, 0.047, 0.014, 0.024, 0.014, 0.018, 0.021, 0.065],
+        [0.059, 0.040, 0.021, 0.063, 0.047, 0.047, 0.044, 0.036, 0.030, 0.026, 0.026, 0.104],
+        [0.310, 0.153, 0.139, 0.158, 0.155, 0.169, 0.077, 0.463, 0.044, 0.075, 0.280, 0.760],
+        [0.055, 0.038, 0.016, 0.047, 0.054, 0.057, 0.037, 0.026, 0.032, 0.029, 0.021, 0.097],
+        [0.086, 0.053, 0.025, 0.063, 0.057, 0.072, 0.031, 0.043, 0.027, 0.030, 0.039, 0.133],
+        [0.161, 0.101, 0.059, 0.120, 0.111, 0.093, 0.036, 0.183, 0.025, 0.046, 0.169, 0.260],
+        [0.004, 0.002, 0.002, 0.002, 0.002, 0.002, 0.001, 0.003, 0.001, 0.001, 0.002, 0.008],
+    ];
+
+    return XE_err;
+}
+
+/*****************************************************************************
+ *
+ * Function inv_cross_elast()
+ *
+ * Return the inverse cross-elasticity matrix. As noted in the HTML (Notes h2)
+ * the existence of this function is a legacy of earlier versions of the code
+ * that embedded the inverse matrix hard-coded from R. The function here is
+ * retained to avoid refactoring the code.
+ *
+ *****************************************************************************/
+
+ function inv_cross_elast() {
+    return math.inv(cross_elast());
+}
+
+/*****************************************************************************
+ *
+ * Function mean_consume_per_person_per_week_kg()
+ *
+ * Return the per-capita per week consumption of each protein in kg, as per
+ * Table 1 of Dogbe et al. (2024). This could be a global variable.
+ *
+ *****************************************************************************/
+
+function mean_consume_per_person_per_week_kg() {
+    // These data come from https://link.springer.com/article/10.1186/s40100-024-00324-8/tables/1
+    const CS = [
+        3.83, 0.20, 0.02, 0.29, 0.32, 0.33, 3.19, 0.10, 0.26, 0.09, 0.05, 33.98
+    ];
+
+    return CS;
+}
+
+/*****************************************************************************
+ *
+ * Function update_quantities()
+ *
+ * Called from the Update... ...Quantities button, this function computes
+ * the change in demand arising from a price change scenario:
+ *
+ * \Delta Q = M \Delta P
+ *
+ *****************************************************************************/
+
+function update_quantities() {
+    const prices = foods.map(f => document.getElementById("p_" + f).value);
+
+    const quants = multiply_matrix_vector(cross_elast(), prices);
+
+    foods.forEach((f, i) => {
+        document.getElementById("q_" + f).value = quants[i].toFixed(dig);
+    });
+
+    update_volumes();
+
+    last_update = 1;
+}
+
+/*****************************************************************************
+ *
+ * Function update_prices()
+ *
+ * Called from the Update... ...Prices button, this function computes the
+ * change in prices arising from a demand change scenario:
+ *
+ * \Delta P = M^{-1} \Delta Q
+ *
+ *****************************************************************************/
+
+function update_prices() {
+    const quants = foods.map(f => document.getElementById("q_" + f).value); 
+
+    const prices = multiply_matrix_vector(inv_cross_elast(), quants);
+
+    foods.forEach((f, i) => {
+        document.getElementById("p_" + f).value = prices[i].toFixed(dig);
+    });
+
+    update_volumes();
+
+    last_update = -1;
+}
+
+/*****************************************************************************
+ *
+ * Function repeat_update()
+ *
+ * Called from the Only significant? checkbox, this function repeats whichever
+ * of Update...|Find... ...Prices|...Quantities was last done (if any).
+ *
+ *****************************************************************************/
+
+function repeat_update() {
+    if(last_update == -1) {
+        update_prices();
+    }
+    else if(last_update == 1) {
+        update_quantities();
+    }
+    else if(last_update == -2) {
+        z_foods.forEach(f => {
+            document.getElementById("q_" + f).value = 0;
+        });
+        find_price();
+    }
+    else if(last_update == 2) {
+        z_foods.forEach(f => {
+            document.getElementById("p_" + f).value = 0;
+        });
+        find_quantity();
+    }
+}
+
+/*****************************************************************************
+ *
+ * Function update_volumes()
+ *
+ * Called from the Per capita? checkbox, and the various time unit radio 
+ * buttons, as well as each time update_prices() or update_quantities() is
+ * called, this function calculates the effects of the change(s) in demand
+ * on the mass of each protein source consumed.
+ *
+ *****************************************************************************/
+
+function update_volumes() {
+    const multiplier = document.getElementById("per_capita").checked ? (
+        document.getElementById("t_day").checked ? (1 / 7)
+            : (document.getElementById("t_year").checked ? (365 / 7000) : 1)
+    ) : (
+        document.getElementById("t_day").checked ? (scot_pop / 7e6)
+            : (document.getElementById("t_year").checked ? (scot_pop * 365 / 7e9) : (scot_pop / 1e6))
+    );
+    document.getElementById("units").innerText = document.getElementById("per_capita").checked ? (
+        document.getElementById("t_day").checked ? "kg/person/day"
+            : (document.getElementById("t_year").checked ? "T/person/year" : "kg/person/week")
+    ) : (
+        document.getElementById("t_day").checked ? "kT/Scotland/day"
+            : (document.getElementById("t_year").checked ? "MT/Scotland/year" : "kT/Scotland/week")
+    );
+    const consumpt = mean_consume_per_person_per_week_kg();
+
+    var sum_i = 0;
+    var sum_v = 0;
+    foods.forEach((f, i) => {
+        const init = multiplier * consumpt[i];
+        const delta = 1 + (document.getElementById("q_" + f).value / 100)
+        document.getElementById("i_" + f).textContent = init.toFixed(dig);
+        document.getElementById("v_" + f).textContent = (delta * init).toFixed(dig);
+        if(f != "misc") {
+            sum_i += init;
+            sum_v += delta * init
+        }
+    });
+    document.getElementById("i_total").textContent = sum_i.toFixed(dig);
+    document.getElementById("v_total").textContent = sum_v.toFixed(dig);
+}
+
+/*****************************************************************************
+ *
+ * Function multiply_matrix_vector()
+ *
+ * Fortunately, all of the matrix multiplications needed to perform the
+ * various calculations entail an n by m matrix A being multiplied by
+ * a vector V of length n. This function provides the implementation.
+ *
+ *****************************************************************************/
+
+function multiply_matrix_vector(A, V) {
+    const n_row = A.length;
+    const n_col = A[0].length;
+    const m_row = V.length;
+
+    if(n_col != m_row) {
+        // It is possible that the user should be alerted that there
+        // is a bug in the page at this point.
+        console.log("Number of columns of A != number of rows of V");
+        return null;
+    }
+    else {
+        const R = new Array(n_row);
+
+        for(let r = 0; r < n_row; r++) {
+            let sum = 0;
+            for(let c = 0; c < n_col; c++) {
+                sum += A[r][c] * V[c];
+            }
+            R[r] = sum;
+        }
+
+        return R;
+    }
+}
+
+/*****************************************************************************
+ *
+ * Function find_price_quantity()
+ *
+ * This function provides a common implementation for both of the Find... 
+ * buttons. The main HTML text provides an explanation of the maths behind
+ * the implementation.
+ *
+ *****************************************************************************/
+
+function find_price_quantity(is_price) {
+    let ixes = [];
+    let non_ixes = [];
+    let R = [];
+    let minus_R = [];
+    let find = is_price ? "p_" : "q_";
+    let given = is_price ? "q_" : "p_";
+    let A = [];
+    let B = [];
+    let C = [];
+    let D = [];
+
+    let M = is_price ? inv_cross_elast() : cross_elast();
+
+    // Initialise arrays for the scenario, and store the values 
+    // to 'zero' in the 'given' column so we can rerun it in repeat_update()
+
+    z_foods.length = 0;
+    foods.forEach((f, i) => {
+        const fpq = document.getElementById(given + f).value;
+        if(fpq != 0) {
+            ixes.push(i);
+            R.push(fpq);
+            minus_R.push(-1 * fpq);
+        }
+        else {
+            non_ixes.push(i);
+            document.getElementById(find + f).value = 0;
+            z_foods.push(f);
+        }
+    });
+
+    if(ixes.length == 0) {
+        // The calculations after this will bork if everything is zero
+        // in the 'given' column
+        alert("At least one value must be entered in % Change " + (is_price ? "Demand" : "Price"));
+        return;
+    }
+
+    // Divide M into blocks [ [A, B] [C, D] ] 
+
+    ixes.forEach(i => {
+        let A_row = [];
+        ixes.forEach(j => {
+            A_row.push(M[i][j]);
+        });
+        A.push(A_row);
+
+        let B_row = [];
+        non_ixes.forEach(j => {
+            B_row.push(M[i][j]);
+        });
+        B.push(B_row);
+    });
+
+    non_ixes.forEach(i => {
+        let C_row = [];
+        ixes.forEach(j => {
+            C_row.push(M[i][j]);
+        });
+        C.push(C_row);
+
+        let D_row = [];
+        non_ixes.forEach(j => {
+            D_row.push(M[i][j]);
+        });
+        D.push(D_row);
+    });
+
+    // The following implements the formula explained in the HTML: T = AR + B(D_inv(-CR))
+
+    let D_inv = math.inv(D);
+
+    let AR = multiply_matrix_vector(A, R);
+    let minus_CR = multiply_matrix_vector(C, minus_R);
+    let BDCR = multiply_matrix_vector(B, multiply_matrix_vector(D_inv, minus_CR));
+
+    let T = AR.map((ar, i) => ar + BDCR[i]);
+
+    // Populate the 'find' column entries and update the 'given' column
+
+    T.forEach((pq, i) => {
+        document.getElementById(find + foods[ixes[i]]).value = pq.toFixed(3);
+    });
+
+    if(is_price) {
+        update_quantities();
+    } 
+    else {
+        update_prices();
+    }
+}
+
+/*****************************************************************************
+ *
+ * Function find_price()
+ *
+ * This function is called from the Find... ...Prices button, to set up
+ * the call to the common find_price_quantity() function and set last_update
+ *
+ *****************************************************************************/
+
+function find_price() {
+    find_price_quantity(true);
+    last_update = -2;
+}
+
+/*****************************************************************************
+ *
+ * Function find_quantity()
+ *
+ * This function is called from the Find... ...Quantities button, to set up
+ * the call to the common find_price_quantity() function and set last_update
+ *
+ *****************************************************************************/
+
+function find_quantity() {
+    find_price_quantity(false);
+    last_update = 2;
+}
+
+/*****************************************************************************
+ *
+ * Function export_table_csv()
+ *
+ * Called from the Save Table button, this function allows the user to
+ * download a CSV file of the current table in the Usage section of the page.
+ * Note that the Non-Miscellaneous Totals are not included, and CSV format
+ * does not allow for colspan, so the exported CSV file is not identical to
+ * the table as displayed on the page.
+ *
+ *****************************************************************************/
+
+function export_table_csv() {
+    let rows = [];
+
+    let header = [];
+
+    header.push(document.getElementById("h_protein").textContent);
+    header.push(document.getElementById("h_delta_p").textContent);
+    header.push(document.getElementById("h_delta_q").textContent);
+    header.push(document.getElementById("h_initial").textContent + " (" + document.getElementById("units").textContent + ")");
+    header.push(document.getElementById("h_scenario").textContent + " (" + document.getElementById("units").textContent + ")");
+
+    rows.push("\"" + header.join("\",\"") + "\"");
+
+    foods.forEach(f => {
+        let row = [];
+        row.push("\"" + document.getElementById("h_" + f).textContent + "\"");
+        row.push(document.getElementById("p_" + f).value);
+        row.push(document.getElementById("q_" + f).value);
+        row.push(document.getElementById("i_" + f).textContent);
+        row.push(document.getElementById("v_" + f).textContent);
+
+        rows.push(row.join(","));
+    });
+
+    export_csv(rows.join("\n"), "cross_elast_table.csv");
+}
+
+/*****************************************************************************
+ *
+ * Function export_matrix_csv()
+ *
+ * Called from the Download Matrix button, this function allows the user to
+ * download the cross-elasticity matrix. Note that this includes the setting
+ * of the Only significant? checkbox, which if checked, will download a CSV
+ * file with zero entries for elements in the cross-elasticity matrix that
+ * are not significant.
+ *
+ *****************************************************************************/
+
+function export_matrix_csv() {
+    export_any_matrix_csv(cross_elast(), "cross_elast_matrix.csv");
+}
+
+/*****************************************************************************
+ *
+ * Function export_matrix_inv_csv()
+ *
+ * Called from the Download Inverse Matrix button, this function saves a
+ * CSV file of the inverse cross-elasticity matrix. As per export_matrix_csv()
+ * this function respects the setting of the Only significant? checkbox.
+ *
+ *****************************************************************************/
+
+function export_matrix_inv_csv() {
+    export_any_matrix_csv(inv_cross_elast(), "cross_elast_inverse.csv");
+}
+
+/*****************************************************************************
+ *
+ * Function export_matrix_err_csv()
+ *
+ * Called fromt he Download Standard Errors Matrix button, this function saves
+ * a CSV file of the cross-elasticity matrix standard errors.
+ *
+ *****************************************************************************/
+
+function export_matrix_err_csv() {
+    export_any_matrix_csv(cross_elast_err(), "cross_elast_std_err.csv")
+}
+
+/*****************************************************************************
+ *
+ * Function export_any_matrix_csv()
+ *
+ * This function provides a common implementation for saving any matrix as
+ * a CSV file.
+ *
+ *****************************************************************************/
+
+function export_any_matrix_csv(matrix, filename) {
+    let rows = [];
+
+    let header = [];
+
+    header.push(document.getElementById("h_protein").textContent);
+
+    foods.forEach(f => {
+        header.push(document.getElementById("h_" + f).textContent);
+    });
+
+    rows.push("\"" + header.join("\",\"") + "\"");
+
+    matrix.forEach((v, i) => {
+        let row = [];
+
+        row.push("\"" + document.getElementById("h_" + foods[i]).textContent + "\"");
+
+        v.forEach(ij => {
+            row.push(ij.toFixed(export_dig));
+        });
+
+        rows.push(row.join(","));
+    });
+
+    export_csv(rows.join("\n"), filename);
+}
+
+/*****************************************************************************
+ *
+ * Function export_consumption_csv()
+ *
+ * This function provides an implementation of the Download Consumption
+ * button, allowing the user to save a CSV file of the food consumption data.
+ * It does not respect the settings of the time units or per capita? checkbox
+ * -- a matter that is debatable.
+ *
+ *****************************************************************************/
+
+function export_consumption_csv() {
+    let rows = [];
+
+    let header = [];
     
-  </head>
-  <body>
-    <h1>Under Construction...</h1>
-  </body>
+    header.push(document.getELementById("h_protein").textContent);
+    header.push("Consumption (kg/person/week)");
+
+    rows.push("\"" + header.join("\",\"") + "\""); 
+
+    vector = mean_consume_per_person_per_week_kg();
+
+    foods.forEach((f, i) => {
+        let row = [];
+
+        row.push("\"" + document.getElementById("h_" + f).textContent + "\"");
+
+        row.push(vector[i]);
+
+        rows.push(row.join(","));
+    });
+
+    export_csv(rows.join("\n"), "protein_consumption.csv");
+}
+
+/*****************************************************************************
+ *
+ * Function export_csv()
+ *
+ * This function provides a common implementation for saving a string (csv)
+ * to a CSV file (filename) as a download. Though probably not necessary
+ * here, to make the function generic and reusable elsewhere, it exports
+ * a UTF-8 file, and only adds a byte order mark (BOM) if the user has
+ * said they want to read the CSV file in Microsoft Excel.
+ *
+ *****************************************************************************/
+
+function export_csv(csv, filename) {
+    const add_BOM = (document.getElementById("excel").checked
+        && !(/^[\x00-\x7F]*$/.test(csv))) ? "\uFEFF" + csv : csv;
+    const blob = new Blob([add_BOM], {
+        type: "text/csv;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/*****************************************************************************
+ *
+ * Function dogbe_scenario_all_meat()
+ *
+ * Provides an implementation of the All Non-Plant-Based Products button.
+ *
+ *****************************************************************************/
+
+function dogbe_scenario_all_meat() {
+    document.getElementById("p_dairy").value = 10;
+    document.getElementById("p_beef").value = 10;
+    document.getElementById("p_lamb").value = 10;
+    document.getElementById("p_pork").value = 10;
+    document.getElementById("p_poultry").value = 10;
+    document.getElementById("p_fish").value = 10;
+    document.getElementById("p_eggs").value = 10;
+    document.getElementById("p_peas").value = 0;
+    document.getElementById("p_beans").value = 0;
+    document.getElementById("p_nuts").value = 0;
+    document.getElementById("p_non_dairy").value = 0;
+    document.getElementById("p_misc").value = 0;
+
+    update_quantities();
+}
+
+/*****************************************************************************
+ *
+ * Function dogbe_scenario_red_meat()
+ *
+ * Provides an implementation of the Red Meat button.
+ *
+ *****************************************************************************/
+
+function dogbe_scenario_red_meat() {
+    document.getElementById("p_dairy").value = 0;
+    document.getElementById("p_beef").value = 10;
+    document.getElementById("p_lamb").value = 10;
+    document.getElementById("p_pork").value = 10;
+    document.getElementById("p_poultry").value = 0;
+    document.getElementById("p_fish").value = 0;
+    document.getElementById("p_eggs").value = 0;
+    document.getElementById("p_peas").value = 0;
+    document.getElementById("p_beans").value = 0;
+    document.getElementById("p_nuts").value = 0;
+    document.getElementById("p_non_dairy").value = 0;
+    document.getElementById("p_misc").value = 0;
+
+    update_quantities();
+}
+
+/*****************************************************************************
+ *
+ * Function dogbe_scenario_white_meat()
+ *
+ * Provides an implementation of the White Meat button.
+ *
+ *****************************************************************************/
+
+function dogbe_scenario_white_meat() {
+    document.getElementById("p_dairy").value = 0;
+    document.getElementById("p_beef").value = 0;
+    document.getElementById("p_lamb").value = 0;
+    document.getElementById("p_pork").value = 0;
+    document.getElementById("p_poultry").value = 10;
+    document.getElementById("p_fish").value = 10;
+    document.getElementById("p_eggs").value = 0;
+    document.getElementById("p_peas").value = 0;
+    document.getElementById("p_beans").value = 0;
+    document.getElementById("p_nuts").value = 0;
+    document.getElementById("p_non_dairy").value = 0;
+    document.getElementById("p_misc").value = 0;
+
+    update_quantities();
+}
+
+/*****************************************************************************
+ *
+ * Function dogbe_scenario_eggs_dairy()
+ *
+ * Provides an implementation of the Eggs and Dairy button.
+ *
+ *****************************************************************************/
+
+function dogbe_scenario_eggs_dairy() {
+    document.getElementById("p_dairy").value = 10;
+    document.getElementById("p_beef").value = 0;
+    document.getElementById("p_lamb").value = 0;
+    document.getElementById("p_pork").value = 0;
+    document.getElementById("p_poultry").value = 0;
+    document.getElementById("p_fish").value = 0;
+    document.getElementById("p_eggs").value = 10;
+    document.getElementById("p_peas").value = 0;
+    document.getElementById("p_beans").value = 0;
+    document.getElementById("p_nuts").value = 0;
+    document.getElementById("p_non_dairy").value = 0;
+    document.getElementById("p_misc").value = 0;
+
+    update_quantities();
+}
+
+/*****************************************************************************
+ *
+ * Function scenario_plant_based()
+ *
+ * Provides an implementation of the Subsidise Plant-Based Products button.
+ *
+ *****************************************************************************/
+
+function scenario_plant_based() {
+    document.getElementById("q_dairy").value = 0;
+    document.getElementById("q_beef").value = 0;
+    document.getElementById("q_lamb").value = 0;
+    document.getElementById("q_pork").value = 0;
+    document.getElementById("q_poultry").value = 0;
+    document.getElementById("q_fish").value = 0;
+    document.getElementById("q_eggs").value = 0;
+    document.getElementById("q_peas").value = 10;
+    document.getElementById("q_beans").value = 10;
+    document.getElementById("q_nuts").value = 10;
+    document.getElementById("q_non_dairy").value = 10;
+    document.getElementById("q_misc").value = 0;
+
+    find_price();    
+}
+
+/*****************************************************************************
+ *
+ * Function scenario_red_meat()
+ *
+ * Provides an implementation of the Reduce Demand for Red Meat button.
+ *
+ *****************************************************************************/
+
+function scenario_red_meat() {
+    document.getElementById("p_dairy").value = 0;
+    document.getElementById("p_beef").value = 10;
+    document.getElementById("p_lamb").value = 10;
+    document.getElementById("p_pork").value = 10;
+    document.getElementById("p_poultry").value = 0;
+    document.getElementById("p_fish").value = 0;
+    document.getElementById("p_eggs").value = 0;
+    document.getElementById("p_peas").value = 0;
+    document.getElementById("p_beans").value = 0;
+    document.getElementById("p_nuts").value = 0;
+    document.getElementById("p_non_dairy").value = 0;
+    document.getElementById("p_misc").value = 0;
+
+    find_quantity();    
+}
+
+// Attach listeners to all the widgets
+document.getElementById("update_q").addEventListener("click", update_quantities);
+document.getElementById("update_p").addEventListener("click", update_prices);
+document.getElementById("find_q").addEventListener("click", find_quantity);
+document.getElementById("find_p").addEventListener("click", find_price);
+document.getElementById("only_sig").addEventListener("click", repeat_update);
+document.getElementById("per_capita").addEventListener("click", update_volumes);
+document.getElementById("t_day").addEventListener("click", update_volumes);
+document.getElementById("t_week").addEventListener("click", update_volumes);
+document.getElementById("t_year").addEventListener("click", update_volumes);
+document.getElementById("save_table").addEventListener("click", export_table_csv);
+document.getElementById("download_matrix").addEventListener("click", export_matrix_csv);
+document.getElementById("download_inverse").addEventListener("click", export_matrix_inv_csv);
+document.getElementById("download_std_err").addEventListener("click", export_matrix_err_csv);
+document.getElementById("download_consumption").addEventListener("click", export_consumption_csv);
+document.getElementById("scenario_all").addEventListener("click", dogbe_scenario_all_meat);
+document.getElementById("scenario_red").addEventListener("click", dogbe_scenario_red_meat);
+document.getElementById("scenario_white").addEventListener("click", dogbe_scenario_white_meat);
+document.getElementById("scenario_eggs_dairy").addEventListener("click", dogbe_scenario_eggs_dairy);
+document.getElementById("scenario_reduce_red_meat").addEventListener("click", scenario_red_meat);
+document.getElementById("scenario_plant_based").addEventListener("click", scenario_plant_based);
+
+// Ensure that everything is zero when the page is refreshed (Firefox doesn't)
+
+foods.forEach(f => {
+    document.getElementById("p_" + f).value = 0;
+    document.getElementById("q_" + f).value = 0;
+})
+
+// Call update_volumes() so that the Scenario Volumes column looks tidy when
+// the page loads first time
+update_volumes();
+        </script>
+
+        <h2>Document properties</h2>
+
+        <p><b>Author:</b> <a href="https://www.hutton.ac.uk/people/gary-polhill/">Gary Polhill</a></p>
+        <p><b>Commissioner:</b> <a href="https://www.hutton.ac.uk/people/matt-hare/">Matt Hare</a></p>
+        <p><b>Quality Check:</b> <a href="https://www.hutton.ac.uk/people/nick-roxburgh/">Nick Roxburgh</a></p>
+    </body>
 </html>
